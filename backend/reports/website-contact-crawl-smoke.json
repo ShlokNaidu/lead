@@ -1,0 +1,65 @@
+{
+  "generatedAt": "2026-04-16T22:19:11.429Z",
+  "mode": "manual",
+  "summary": {
+    "scanned": 1,
+    "withEmail": 0,
+    "withWhatsapp": 0,
+    "withSocials": 1
+  },
+  "results": [
+    {
+      "id": "manual-1",
+      "name": "Manual URL",
+      "city": "",
+      "website": "https://cafedaphna.ge",
+      "crawl": {
+        "ok": true,
+        "error": "",
+        "pages": [
+          {
+            "url": "https://cafedaphna.ge/",
+            "status": 200,
+            "finalUrl": "https://cafedaphna.ge/",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "url": "https://cafedaphna.ge/contact",
+            "status": 404,
+            "finalUrl": "https://cafedaphna.ge/contact",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "url": "https://cafedaphna.ge/about",
+            "status": 200,
+            "finalUrl": "https://cafedaphna.ge/about/",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "url": "https://cafedaphna.ge/contact-us",
+            "status": 404,
+            "finalUrl": "https://cafedaphna.ge/contact-us",
+            "ok": true,
+            "error": ""
+          },
+          {
+            "url": "https://cafedaphna.ge/about-us",
+            "status": 404,
+            "finalUrl": "https://cafedaphna.ge/about-us",
+            "ok": true,
+            "error": ""
+          }
+        ],
+        "emails": [],
+        "whatsappLinks": [],
+        "socialLinks": [
+          "https://www.instagram.com/cafe_daphna",
+          "https://www.facebook.com/cafedaphna"
+        ]
+      }
+    }
+  ]
+}
