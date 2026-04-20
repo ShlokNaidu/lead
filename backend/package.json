@@ -6,6 +6,7 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
+    "prestart": "npx puppeteer browsers install chrome",
     "start": "node server.js",
     "postinstall": "npx puppeteer browsers install chrome"
   },
