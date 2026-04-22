@@ -12,6 +12,9 @@ const config = {
   scrapeDelay: 2000,
   maxLeadsPerRun: 10,
   lighthouseTimeout: 30000,
+  mapsSearchTimeoutMs: Number(process.env.MAPS_SEARCH_TIMEOUT_MS) || 30000,
+  mapsDetailTimeoutMs: Number(process.env.MAPS_DETAIL_TIMEOUT_MS) || 15000,
+  mapsDetailRetries: Number(process.env.MAPS_DETAIL_RETRIES) || 1,
   speedCriticalThreshold: 50,
   speedSlowThreshold: 70,
   websiteDeepCrawlEnabled:

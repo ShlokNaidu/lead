@@ -6,6 +6,36 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isNavigationTimeout(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return message.includes("navigation timeout");
+}
+
+async function gotoWithRetry(page, url, { timeoutMs, retries = 0, waitUntil = "domcontentloaded" }) {
+  let lastError = null;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await page.goto(url, {
+        waitUntil,
+        timeout: timeoutMs,
+      });
+    } catch (error) {
+      lastError = error;
+      const isLastAttempt = attempt >= retries;
+      if (isLastAttempt || !isNavigationTimeout(error)) {
+        throw error;
+      }
+
+      console.warn(
+        `[maps] Navigation timeout for ${url} (attempt ${attempt + 1}/${retries + 1}), retrying...`,
+      );
+    }
+  }
+
+  throw lastError || new Error("Navigation failed");
+}
+
 async function extractResultCards(page) {
   await page.waitForSelector("div[role='feed']", { timeout: 15000 });
 
@@ -42,9 +72,10 @@ async function extractResultCards(page) {
 
 async function enrichLead(page, lead) {
   try {
-    await page.goto(lead.googleMapsUrl, {
+    await gotoWithRetry(page, lead.googleMapsUrl, {
       waitUntil: "domcontentloaded",
-      timeout: 30000,
+      timeoutMs: config.mapsDetailTimeoutMs,
+      retries: config.mapsDetailRetries,
     });
     await sleep(1200);
 
@@ -91,15 +122,16 @@ export async function scrapeGoogleMapsLeads({ query, city, maxResults }) {
 
     const page = await browser.newPage();
     await page.setUserAgent(config.userAgent);
-    await page.setDefaultNavigationTimeout(30000);
+    await page.setDefaultNavigationTimeout(config.mapsSearchTimeoutMs);
 
     const searchUrl = `https://www.google.com/maps/search/${encodeURIComponent(
       `${safeQuery} ${safeCity}`
     )}`;
 
-    await page.goto(searchUrl, {
+    await gotoWithRetry(page, searchUrl, {
       waitUntil: "domcontentloaded",
-      timeout: 30000,
+      timeoutMs: config.mapsSearchTimeoutMs,
+      retries: 1,
     });
 
     await sleep(config.scrapeDelay);
