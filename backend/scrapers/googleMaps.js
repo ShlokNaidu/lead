@@ -11,14 +11,27 @@ function isNavigationTimeout(error) {
   return message.includes("navigation timeout");
 }
 
+function normalizeNavigationTimeout(timeoutMs) {
+  const parsed = Number(timeoutMs);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    // Puppeteer uses timeout: 0 to disable the navigation timeout.
+    return 0;
+  }
+
+  return parsed;
+}
+
+const MIN_LEAD_NAVIGATION_TIMEOUT_MS = 20 * 60 * 1000;
+
 async function gotoWithRetry(page, url, { timeoutMs, retries = 0, waitUntil = "domcontentloaded" }) {
   let lastError = null;
+  const navigationTimeoutMs = normalizeNavigationTimeout(timeoutMs);
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
       return await page.goto(url, {
         waitUntil,
-        timeout: timeoutMs,
+        timeout: navigationTimeoutMs,
       });
     } catch (error) {
       lastError = error;
@@ -37,7 +50,7 @@ async function gotoWithRetry(page, url, { timeoutMs, retries = 0, waitUntil = "d
 }
 
 async function extractResultCards(page) {
-  await page.waitForSelector("div[role='feed']", { timeout: 15000 });
+  await page.waitForSelector("div[role='feed']", { timeout: 0 });
 
   const cards = await page.evaluate(() => {
     const anchors = Array.from(document.querySelectorAll("a.hfpxzc"));
@@ -72,10 +85,15 @@ async function extractResultCards(page) {
 
 async function enrichLead(page, lead) {
   try {
+    const leadNavigationTimeoutMs = Math.max(
+      normalizeNavigationTimeout(config.mapsDetailTimeoutMs),
+      MIN_LEAD_NAVIGATION_TIMEOUT_MS,
+    );
+
     await gotoWithRetry(page, lead.googleMapsUrl, {
       waitUntil: "domcontentloaded",
-      timeoutMs: config.mapsDetailTimeoutMs,
-      retries: config.mapsDetailRetries,
+      timeoutMs: leadNavigationTimeoutMs,
+      retries: 0,
     });
     await sleep(1200);
 
@@ -122,7 +140,7 @@ export async function scrapeGoogleMapsLeads({ query, city, maxResults }) {
 
     const page = await browser.newPage();
     await page.setUserAgent(config.userAgent);
-    await page.setDefaultNavigationTimeout(config.mapsSearchTimeoutMs);
+    await page.setDefaultNavigationTimeout(0);
 
     const searchUrl = `https://www.google.com/maps/search/${encodeURIComponent(
       `${safeQuery} ${safeCity}`
@@ -130,8 +148,8 @@ export async function scrapeGoogleMapsLeads({ query, city, maxResults }) {
 
     await gotoWithRetry(page, searchUrl, {
       waitUntil: "domcontentloaded",
-      timeoutMs: config.mapsSearchTimeoutMs,
-      retries: 1,
+      timeoutMs: 0,
+      retries: 0,
     });
 
     await sleep(config.scrapeDelay);
